@@ -66,15 +66,22 @@ def meme_form():
 def meme_post():
     """Create a user defined meme."""
     image_url = request.form.get('image_url')
+    print(f'image url -> {image_url}')
     file_name = image_url.split('/')[-1]
     out_file = f'./tmp/{file_name}'
 
-    resp = requests.get(image_url)
+    try:
+        resp = requests.get(image_url, timeout=10)
+    except:
+        print('Please enter a valid Image URL!.')
+        return render_template('meme_error.html')
 
     with open(out_file, 'wb') as image_file:
         image_file.write(resp.content)
 
-    quote = QuoteModel(request.form.get('body'), request.form.get('author'))
+    body = request.form.get('body') if request.form.get('body') else 'I dont have a body...'
+    author = request.form.get('author') if request.form.get('author') else 'anonymous'
+    quote = QuoteModel(body, author)
     path = meme.make_meme(out_file, quote.body, quote.author)
 
     return render_template('meme.html', path=path)
